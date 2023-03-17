@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p>
+    <br>
+</p><h1>Lab 3: Reading Material</h1>
+<br>Lab 3 is dedicated to dynamic data structures in C, program debugging via the use of valgrind(1) and patching of
+binary files.
+<br>
+<h3>Dynamic data structures in C</h3>
+<br>Dynamic data structures in C are usually built using pointers and C structures. Please read chapter <a href="http://en.wikibooks.org/wiki/C_Programming/Complex_types">Complex types</a> of
+the wikibook. Memory for dynamic data is allocated and released dynamically, on the heap. C library functions for memory
+management are described in chapter <a href="http://en.wikibooks.org/wiki/C_Programming/Memory_management">Memory management</a>.
+<br>
+<h3>Patching</h3>
+<br>A convenient utility for inspecting binary files, called hexedit(1), is installed on the lab computers. Please read
+the <b>man</b> for the utility and familiarize yourself with hexedit by trying to view and edit a few different files.
+<br>
+<h3>Debugging</h3>
+<br>Please read the <b>man</b> page for valgrind(1), you can focus on the --leak-check, --show-reachable and -v parameters.
+valgrind can help you detect memory leaks and other types of errors (e.g. illegal access to memory address). A quick
+start guide can be found <a href="http://valgrind.org/docs/manual/quick-start.html">here</a>. For a complete list of error messages and their meaning -
+<a href="http://valgrind.org/docs/manual/mc-manual.html">http://valgrind.org/docs/manual/mc-manual.html</a>
+<br>
+<h3>Input from stdin or other files</h3>
+<br>You already know fgets(3) for getting "strings" from files (like stdin). Now you must also learn to use fread( )
+(see man fread(3)) to read a pre-specified number of bytes from a file. In order to format printouts, you should be more
+familiar with printf(3). In order to parse strings efficiently and extract values of different types from them you
+should use sscanf(3).
+<br>
+<h3>Other functions to learn</h3>
+<br>You should also be familiar with memcmp( ), fseek( ) and fwrite( ).
+<p></p>
+
+</body></html>

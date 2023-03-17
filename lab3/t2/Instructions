@@ -1,0 +1,3 @@
+The program assumes that in current folder there are: 
+-file named signatures-L that contains signatures of viruses
+-file named infected that needs to be fixed
