@@ -1,0 +1,242 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><h1>Labs 9: ELF - Introduction with Code</h1>
+<div class="info">
+This lab may be done either solo or in pairs.
+</div>
+<p>
+In the previous lab, you learned to investigate and change ELF files using hexedit, and other command-line tools.
+ In this lab, you will continue to manipulate ELF files, this time using your own code (written in C).<br>
+</p><p>
+We will parse the ELF file and extract useful information from it. In particular, we will access the 
+data in the section header table, and in the symbol table.
+We will also learn to use the <tt>mmap</tt> system call.
+</p><h3 id="important">Important</h3>
+This lab is written for 32-bit machines. Some of the computers in the labs already run on a 
+64-bit OS (use<i> uname -a</i> to see if the linux OS is 64-bit or not). 32-bit and 64-bit machines have different 
+instruction sets and different memory layout. Make sure to include the <i>-m32</i> flag when you compile files, 
+and to use the Elf32 data structures (and not the Elf64 ones).<br>
+<p></p><p>
+In order to know if an executable file is compiled for 64-bit or 32-bit platform, you can use readelf, 
+or the <i>file</i> command-line tool (for example: <code class="code">file /bin/ls</code>).
+</p><p>
+</p><div class="tip">
+<h3 id="useful_tips">Useful Tips</h3>
+You will no longer be using <i>hexedit</i> to process the file and 
+strings to find the information; nevertheless, in some cases you may 
+still want to use these tools for debugging purposes. In order to take 
+advantage of these tools and make your tasks easier, you should:<br>
+<ul>
+  <li>   Print debugging messages: in particular the offsets of the various items, as you discover them from the headers.
+  </li><li>   Use <i>hexedit</i> and <i>readelf</i> to compare the information you are looking for, especially if you run into unknown problems. <i>hexedit</i> is great if you know the exact location of the item you are looking for.
+  </li><li>   Note that while the object files you will be processing will be linked using <i>ld</i>,
+ and will, in most cases, use direct system calls in order to make the 
+ELF file simpler, there is no reason why the programs you write need use
+ this interface. You are allowed to use the standard library when 
+building your own C programs.
+  </li><li>   In order to preserve your sanity, even if the code you 
+MANIPULATE may be without stdlib, we advise that for your OWN CODE you 
+DO use the C standard library!
+  </li><li>   In order to keep sane in the following lab as well, <b>understand</b> what you are doing and <b>keep track</b> of that and of your code, as you will be using them in a future lab. 
+</li></ul>
+</div>
+<h2 id="lab_9_tasks">Lab 9 Tasks</h2>
+<p>
+</p><div class="warning">
+You must use only the <tt>mmap</tt> system call to read/write data into your ELF files from this point onwards.
+</div>
+<h2 id="task_0">Task 0</h2>
+
+<p></p><p>
+This task is about learning to use the <tt>mmap</tt> system call.
+Read about the <tt>mmap</tt> system call (<code class="code">man mmap</code>).
+</p><p>
+Write a program that uses the <tt>mmap</tt> to examine the header of a 32-bit ELF file (include 
+and use the structures in elf.h). The program is first activated as:
+</p><p>
+</p><pre class="code">  myELF
+</pre>
+
+<p></p><p>
+The program then uses a menu similar to lab 8, with available operations, as follows:
+</p><pre class="code">Choose action:
+0-Toggle Debug Mode
+1-Examine ELF File
+2-Print Section Names
+3-Print Symbols
+4-Relocation Tables
+5-Quit
+</pre>
+
+<p></p><p>
+Note that the menu should use the same technique as in lab 2 and in lab 8, i.e. an array of structures of available options.
+Toggle Debug Mode is as in Lab 8. Quit should unmap and close any mapped or open files, and "exit normally".
+Examine ELF Files queries the user for an ELF file name
+to be used and examined henceforth. For now, options 2, 3, 4, should call stub functions
+that print "not implemented yet".
+All file input should be read using the <tt>mmap</tt> system call. You are NOT ALLOWED to 
+use <tt>read</tt>, or <tt>fread</tt>.
+</p><p>
+</p><div class="tip">
+To make your life easier throughout the lab, map the entire file with one <tt>mmap</tt> call.
+</div>
+<p></p><p>
+In Examine ELF File, after getting the file name,
+you should close any currently open file (indicated by global variable 
+Currentfd) open the file for reading, and then print the following:
+</p><ol>
+<li>    Bytes 1,2,3 of the magic number (in ASCII)
+</li><li>    Entry point (in hexadecimal)
+</li></ol>
+<br>
+Check using <i>readelf</i> that your data is correct.
+<p></p><p>
+Once you verified your output, extend <i>examine</i> to print the following information from the header:
+</p><p>
+</p><ol>
+<li>    Bytes 1,2,3 of the magic number (in ASCII). Henceforth, you 
+should check that the number is consistent with an ELF file, and refuse 
+to continue if it is not.
+</li><li>    The data encoding scheme of the object file.
+</li><li>    Entry point (hexadecimal address).
+</li><li>    The file offset in which the section header table resides.
+</li><li>    The number of section header entries.
+</li><li>    The size of each section header entry.
+</li><li>    The file offset in which the program header table resides.
+</li><li>    The number of program header entries.
+</li><li>    The size of each program header entry.
+</li></ol>
+<br>
+The above information should be printed in the above exact order (print it out as nicely as <i>readelf</i> does).
+If invoked on an ELF file, examine should initialize a global file descriptor variable <i>Currentfd</i>
+ for this file,
+and leave the file open.
+When invoked on a non-ELF file, or the file cannot be opened or mapped 
+at all, you should print an error message, unmap the file (if already 
+mapped) close the file (if already open), and set <i>Currentfd</i> to -1
+ to indicate no valid file. You probably also should use a global 
+map_start variable to indicate the memory location of the mapped file.
+
+<h2 id="task_1_-_sections">Task 1 - Sections</h2>
+Extend your myELF program from Task 0 to allow printing of all the Section names in an 32-bit ELF file (like <code class="code">readelf -S</code>). That is, modify the menu to add a "Print Section Names" option.
+<p></p><p>
+Print Section Names should visit all section headers in the section 
+header table, and for each one print its index, name,  address, offset, 
+size in bytes, and type number. Note that this is done for the file 
+currently mapped, so if current fd is invalid,
+just print an error message and return.
+</p><p>
+The format should be:
+</p><pre class="code">[index] section_name section_address section_offset section_size  section_type
+[index] section_name section_address section_offset section_size  section_type
+
+[index] section_name section_address section_offset section_size  section_type
+
+....
+</pre>
+
+<p></p><p>
+Verify your output is correct by comparing it to the output of <i>readelf</i>.
+In debug mode you should also print the value of the important indices 
+and offsets, such as shstrndx and the section name offsets.
+</p><p>
+You can test your code on the following file: <a href="https://moodle.bgu.ac.il/moodle/mod/resource/view.php?id=2334862">a.out</a> </p><p>
+</p><div class="tip"><b>Hints</b><br>
+Global information about the ELF file is in the ELF header, including 
+location and size of important tables. The size and name of the sections
+ appear in the section header table. Recall that the actual name <b>strings</b> are stored in an appropriate <b>section</b> (.shstrtab for section names), and not in the section header!
+<p></p><p>
+</p></div>
+
+<h2 id="task_2_-_symbols">Task 2 - Symbols</h2>
+Extend your myELF program from task 1 to support an option that displays
+ information on all the symbol names in a 32-bit ELF file. <p>
+The new Print Symbols option should visit all the symbols in the current ELF file (if none, print an error message and return).
+For each symbol, print its index number, its name and the name of 
+the section in which it is defined. (similar to <code class="code">readelf -s</code>). Format should be:
+</p><p>
+</p><pre class="code">[index] value section_index section_name symbol_name 
+
+[index] value section_index section_name symbol_name
+
+[index] value section_index section_name symbol_name
+
+...
+</pre>
+
+<p></p><p>
+Verify your output is correct by comparing it to the output of <i>readelf</i>.
+In debug mode you should first print the size of each symbol table, the number of sybmols therein, and
+any other useful information.
+</p><p>
+</p><h4>Hints:</h4> 
+<p>
+Symbols are listed in the designated sections. The section in which a symbol is 
+defined (if it is defined) is the index of the symbol, which is an index into the section header table, 
+referring to the section header of the appropriate section, and from there the section name can be 
+retrieved as above.Symbol name is an attribute of the symbol structure, but recall 
+again that the actual name string is stored in a string table, a separate section(.strtab).
+</p><p>
+</p><div class="info">
+You should finish everything up to here during the lab. The rest can be done in a completion lab, if you run out of time.
+</div>
+<h2 id="task_3_-_relocations">Task 3 - Relocations</h2>
+<h3 id="task_3a_relocation_tables_-_raw_format">Task 3a: Relocation Table(s) - raw format</h3>
+
+<p>
+Print the content of all fields of all relocation tables entries, in hexadecimal format. <br>
+This is similar to what <code class="code">readelf -r</code> prints, except this feature
+prints the raw table data (i.e. without fetching symbol name strings).
+</p><p>
+</p><div class="tip"><b>Hints</b><br>
+To get the relocation table you should look for section of type 'SHT_REL' and use the offset field.
+Every entry in this table is of type 'Elf32_Rel', which has the fields <code class="code">offset</code> and <code class="code">info</code>.
+Using the macro 'ELF32_R_SYM' on the <code class="code">info</code> 
+field gives
+ you the raw data for the symbol (which is an index of the symbol in the
+ .dynsym table where you can find its name and value). Using the 
+'ELF32_R_TYPE' macro on the <code class="code">info</code> field gives you the type of this relocation entry.
+<p></p><p>
+</p></div>
+<p></p>
+
+<h3 id="task_3b_relocation_tables_-_semantic_format">Task 3b: Relocation Table(s) - semantic format</h3>
+You should extend myELF to support this feature:
+
+<p>
+Now that you have accessed and printed the relocation table, add
+a printout that displays the entries with the correct semantics, that is,
+indicate relocation type, symbol used for relocation, etc. The <b>output should be
+similar to that generated by readelf -r (relocation type should be printed as a number. 
+There's no need to translate it to a string)</b>.
+</p><p>
+To get the relation information regarding values, you need to first get the symbol's index (using ELF32_R_SYM 
+on the <code class="code">info</code> field of the relocation entry). You use that to index into the '.dynsym' 
+table and get the symbol entry. The value is  stored in that table. 
+The name of the symbol is extracted from the '.dynstr' table similarly to what you did in task 2.
+For example, using ntsc from lab 8 (readelf -r ntsc):
+</p><pre class="code"> Relocation section '.rel.dyn' at offset 0x340 contains 8 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00001ed4  00000008   8   
+00001ed8  00000008   8   
+00001ff8  00000008   8   
+00002004  00000008   8   
+00001fec  00000106   6              00000000   _ITM_deregisterTMClone
+00001ff0  00000306   6              00000000   __cxa_finalize@GLIBC_2.1.3
+00001ff4  00000406   6              00000000   __gmon_start__
+00001ffc  00000706   6              00000000   _ITM_registerTMCloneTa
+
+Relocation section '.rel.plt' at offset 0x380 contains 3 entries:
+ Offset     Info    Type            Sym.Value  Sym. Name
+00001fe0  00000207   7              00000000   printf@GLIBC_2.0
+00001fe4  00000507   7              00000000   exit@GLIBC_2.0
+00001fe8  00000607   7              00000000   __libc_start_main@GLIBC_2.0
+
+</pre>
+
+<h3 id="deliverables"> Deliverables:</h3> 
+Tasks 1 and 2 must be completed during the regular lab. Task 3 may be done in a completion lab, 
+but only if you run out of time during the regular lab. 
+The deliverables must be submitted until the end of the lab session.<br>
+You must submit source files for tasks 1, 2 and task 3 and a makefile that compiles them. The 
+source files must be named task1.c task2.c, task3.c, and makefile.<br>
+</body></html>

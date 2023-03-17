@@ -1,0 +1,192 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><h1>Lab 10 (C) - Loader</h1>
+
+<h2>Introduction</h2>
+
+In this lab you will implement a static loader.
+Your loader will be able to load (run) static executable files.  These 
+are executable files that do not use dynamic library code.  In 
+particular, your loader will be able to load your code which uses the <tt>system_call</tt> interface, and no standard libraries.
+<b> Note</b>:
+Remember to compile your code with the -m32 flag.
+
+<h2>Task 0</h2>
+<p>
+Write a program, which gets a single command line argument. The argument will be
+the file name of a 32bit ELF formatted executable.
+</p><p>
+Your task is to write an iterator over program headers in
+the file.
+
+Implement a function with the following signature: <br>
+
+<code>
+   int foreach_phdr(void *map_start, void (*func)(Elf32_Phdr *,int), int arg);
+</code>
+
+</p><p>
+The function arguments are:
+</p><ol>
+   <li><tt>map_start</tt>: The address in virtual memory the executable is mapped to.</li>
+   <li><tt>func</tt>: the function which will be applied to each <tt>Phdr</tt>.</li>
+   <li><tt>arg</tt>: an additional argument to be passed to <tt>func</tt>, for later use (not used in this task).
+</li>
+</ol>
+
+This function will apply <tt> func </tt> to each program header.
+<p>
+Verify that your iterator works by applying it to an 32bit ELF file, with
+a function that prints out a message: "Program header number i at
+address x" for each program header i it visits.
+
+
+</p><h2>Task 1</h2>
+<h3>Task 1a:</h3>
+In this task you will use the iterator you created in Task 0, and implement the
+<i>readelf -l</i> functionality.
+
+<p>
+Using the functions from task 0 (the iterator), your task is to go over the program headers 
+in a file and for each header, print all the information which resides in the corresponding <tt>Elf32_Phdr</tt> structure.
+</p>
+<p>
+The output should look similar to <i>readelf -l</i>:
+</p>
+
+<p>
+<code>
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align <br>
+  PHDR            0x000034 0x04048034 0x04048034 0x00100 0x00100 R E 0x4  <br>
+  INTERP         0x000134 0x04048134 0x04048134 0x00013 0x00013 R   0x1  <br>
+  LOAD            0x000000 0x04048000 0x04048000 0x008a4 0x008a4 R E 0x1000  <br>
+  LOAD            0x0008a4 0x040498a4 0x040498a4 0x0011c 0x00120 RW  0x1000 <br>
+  DYNAMIC         0x0008b0 0x040498b0 0x040498b0 0x000c8 0x000c8 RW  0x4  <br>
+  NOTE           0x000148 0x04048148 0x04048148 0x00020 0x00020 R   0x4 <br>
+</code>
+</p>
+
+<h3>Task 1b:</h3>
+<p>
+In the next task we will map the needed segments to memory, so we need to prepare the appropriate data for mapping.
+The loader uses the Program Headers to find the information needed for loading the program to memory and uses 
+<tt>mmap</tt> system call for actually mapping the needed segments to process's memory.
+Specifically, it is VERY important to pass <tt>mmap</tt> the appropriate protection and mapping flags.
+</p><p>
+For each program header that should be mapped to memory, in addition to the information in task 1a, 
+print the appropriate protection flags and mapping flags that should be passed
+to the <tt>mmap</tt> function for this header. 
+
+
+
+<b>Note</b>: The protection flags used by <tt>mmap</tt>, 
+though similar to the flags in the program header, differ in bit position!
+
+</p><h2>Task 2</h2>
+<p>
+Now you will write the actual loader, using the iterator from task 1.
+The loader is mainly a single function, which maps each relevant chunk of the executable into memory. 
+In the end, you should produce an executable program, which receives one command-line argument 
+(an ELF executable), loads it in to memory and passes control to the loaded code.
+</p>
+
+<h3>Task 2a</h3>
+
+Recall that in order to actually load the files using <tt>mmap</tt> as required, 
+you need to obey the instructions in the reading material so as to avoid memory space clashes.
+Download the <h href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3746075/mod_folder/content/0/linking_script?forcedownload=1">
+linking_script file, and compile your code as shown in the reading material.
+Note that we link the program without using any standard libraries, but the loaded program still needs to get a specific stack 
+before it starts executing. Also, we still want the ability to use the <tt>system_call</tt>
+interface (what the "glue" code file <a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3746075/mod_folder/content/0/start.s?forcedownload=1">start.s</a>
+from lab 4 was about). 
+So you have to link your code together with start.o (you do not need startup.o yet).
+
+Verify linking worked properly using <i>readelf -h loader</i>
+
+<p>
+You should be able to explain to the lab instructor why the linking script is needed and how you verified that it worked.
+</p>
+
+<h3>Task 2b</h3>
+
+Implement the following function: <br>
+
+<code>void load_phdr(Elf32_Phdr *phdr, int fd);</code>
+
+<p>This function takes two arguments, a pointer to the Phdr struct and the file descriptor
+of the executable file.
+It should map each <tt>Phdr</tt> that has the <tt>PT_LOAD</tt> flag set, into memory, starting from the specified offset,
+and place it at the virtual address stated in the <tt>Phdr</tt>.
+Each map should be according to the flags set in the <tt>Phdr</tt> struct.
+
+In addition, this function should print to the screen the information about each
+program header it maps (you can use the function from Task 1 to print the information).
+</p>
+
+<p>
+Recommended operating procedure: make sure system calls succeed before proceeding, most especially <tt>mmap</tt>.
+</p>
+
+
+<h3>Task 2c</h3>
+<p>
+After successfully completing the previous function, you should now pass control to the
+loaded program. 
+To achieve this, we provide the code in assembly language (startup.s), you should examine the code we provide.
+You may download its object file
+<a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3746075/mod_folder/content/0/startup.o?forcedownload=1">
+startup.o</a>.
+You need to execute the loaded program using our function startup(), with the following signature: <br><br>
+<code>
+int startup(int argc, char **argv, void (*start)()); <br><br>
+</code>
+and <mark>start</mark> is the entry point of your executable. <br> <br>
+</p>
+
+Your loader should be able to load and run all code from previous labs which
+uses the system_call interface, provided that they are compiled with the -m32 flag and according to 
+the compilation instructions in the system calls lab.
+
+<p>
+However, first try it for a program that does not expect command-line arguments, such as this file:
+<a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3746075/mod_folder/content/0/loadme?forcedownload=1">loadme</a>.
+In case of a bug note the following:
+</p><ul>
+<li> The "arg" of <tt>foreach_phdr</tt> is used correctly - it should be the file descriptor of an open file.</li>
+<li> The file/s that the segments are mapped from must remain open and mapped to memory.</li>
+<li> The correct segments are mapped to memory and flags are set appropriately.</li>
+<li> <tt>startup</tt> is used correctly as following:<br> <code>startup(argc-1, argv+1, (void *)(elf_head-&gt;e_entry))</code></li>
+</ul>
+
+<h3>Task 2d</h3>
+
+<p>
+Now, we assemble the command line arguments and pass them to the loaded program.
+A command line looks like: <br><br>
+
+<code>
+my_loader my_test_program arg1 arg2 ...
+</code>
+
+</p><p>
+
+Where <i>my_loader</i> is the executable program you implemented in this lab,
+<i>my_test_program</i> is the program you are trying to load and run, and
+arg1, arg2, etc. are the command-line arguments that <i>my_test_program</i> should see.
+These are to be passed to it using the <tt>startup</tt> function.
+</p>
+
+
+
+<h2> Deliverables</h2>
+
+<p>
+This lab is not too much work ASSUMING you read the reading material and did task 0 before the lab. 
+So you should complete everything from task 1 to task 2d during lab hours. 
+</p><p>
+If you have any remaining time in this lab session, you should use it to finish
+any unfinished tasks from labs 7 and 8, after you finish lab 9. This may save you from
+having to do completion labs next week.
+</p>
+
+</h></body></html>

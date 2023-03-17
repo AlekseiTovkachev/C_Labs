@@ -1,0 +1,171 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><h2 style="text-align: left;"><span style="text-decoration: underline;"><strong>Lab 7</strong></span></h2>
+<p>Lab 7 is built on top of the code infrastructure of Lab 6, i.e., the "shell". Naturally, you are expected to
+ use the code you wrote for the previous lab.</p>
+<h3><span style="text-decoration: underline;"><strong>Motivation</strong></span></h3>
+<p>In this lab you will enrich the set of capabilities of your shell by implementing&nbsp;<strong>input/output
+ redirection</strong>&nbsp;and&nbsp;<strong>pipelines</strong>&nbsp;(see the reading material). Your shell will then be 
+ able to execute non-trivial commands such as&nbsp;<strong>"tail -n 2 in.txt| cat &gt; out.txt"</strong>, demonstrating the 
+ power of these simple concepts. As a final task, we will also add a basic history mechanism.</p>
+<h3><span style="text-decoration: underline;"><strong>Lab 7 tasks</strong></span></h3>
+<p><span style="text-decoration: underline;"><strong>Task 0</strong></span></p>
+<p><strong>Pipes</strong></p>
+<p>A pipe is a pair of input stream/output stream, such that one stream feeds the other stream directly. All data that is 
+written to one side (the "write end") can be read from the other side (the "read end"). This sort of feed becomes pretty 
+useful when one wishes to communicate between processes.<br> <br> <strong>Your task:</strong>&nbsp;Implement a simple 
+program called&nbsp;<strong>mypipe</strong>, which creates a child process that sends the message "hello" to its parent process. 
+The parent then prints the incoming message and terminates. Use the&nbsp;<strong>pipe</strong>&nbsp;system call (see man) to create the pipe.</p>
+
+<p><strong>History</strong></p>
+
+<p>Check out the "history" mechanism in the Linux shell.
+For example, see <a href="https://opensource.com/article/18/6/history-command">this link</a> and try it out in a Linux shell.</p><p>
+
+</p><p><span style="text-decoration: underline;"><strong>Task 1</strong></span></p>
+<p><strong>Redirection</strong></p>
+<p>Add standard input/output redirection capabilities to your shell (e.g.,&nbsp;<br> <strong>"cat &lt; in.txt &gt; out.txt"</strong>). 
+Guidelines on I/O redirection can be found in the reading material.<br> <br> Notes:</p>
+<ul>
+<li>The&nbsp;<strong>inputRedirect</strong>&nbsp;and&nbsp;<strong>outputRedirect</strong>&nbsp;fields in 
+cmdLine do the parsing work for you. They hold the redirection file names if exist, NULL otherwise.</li>
+<li>Remember to redirect input/output only in the child process. We do 
+not want to redirect the I/O of the shell itself (parent process).</li>
+</ul>
+<p><span style="text-decoration: underline;"><strong>Task 2</strong></span></p>
+<p><strong>Note</strong><br> Task 2 is independent of the shell we revisited in task 1. You're not 
+allowed to use the LineParser functions in this task. However, you need to declare an array of strings containing 
+all of the arguments and ending with 0 to pass to execvp() just like the one returned by parseCmdLines().</p>
+<p><br> Here we wish to explore the implementation of a pipeline. In order to achieve such a pipeline, one has to 
+create pipes and properly redirect the standard outputs and standard inputs of the processes.<br> Please refer to the 
+'Introduction to Pipelines' section in the reading material.<br> <br> <strong>Your task:</strong>&nbsp;Write a short
+program called&nbsp;<strong>mypipeline</strong>&nbsp;which creates a pipeline of 2 child processes. 
+Essentially, you will implement the shell call&nbsp;<strong>"ls -l | tail -n 2"</strong>.<br> 
+(A question:&nbsp;what does "ls -l" do, what does "tail -n 2" do, and what should 
+their combination produce?)<br> <br> <strong>Follow the given steps as closely as possible to avoid synchronization problems:</strong></p>
+<ol>
+<li>Create a pipe.</li>
+<li>Fork a first child process (child1).</li>
+<li>In the child1 process:</li>
+<ol>
+<li>Close the standard output.</li>
+<li>Duplicate the write-end of the pipe using&nbsp;<strong>dup</strong>&nbsp;(see man).</li>
+<li>Close the file descriptor that was duplicated.</li>
+<li>Execute "ls -l".</li>
+</ol>
+<li><strong>In the parent process: Close the write end of the pipe.</strong></li>
+<li>Fork a second child process (child2).</li>
+<li>In the child2 process:</li>
+<ol>
+<li>Close the standard input.</li>
+<li>Duplicate the read-end of the pipe using&nbsp;<strong>dup</strong>.</li>
+<li>Close the file descriptor that was duplicated.</li>
+<li>Execute "tail -n 2".</li>
+</ol>
+<li><strong>In the parent process: Close the read end of the pipe.</strong></li>
+<li>Now wait for the child processes to terminate, in the same order of their execution.</li>
+</ol>
+<p><strong>Mandatory Requirements</strong></p>
+<ol>
+<li>Compile and run the code and make sure it does what it is supposed to do.</li>
+<li>Your program must print the following debugging messages if the argument -d is provided. 
+All debugging messages must be sent to stderr! These are the messages that should be added:</li>
+</ol>
+<ul>
+<ul>
+<li>In the parent process:</li>
+<ul>
+<li>Before forking, "(parent_process&gt;forking…)"</li>
+<li>After forking, "(parent_process&gt;created process with id:&nbsp;)"</li>
+<li>Before closing the write end of the pipe, "(parent_process&gt;closing the write end of the pipe…)"</li>
+<li>Before closing the read end of the pipe, "(parent_process&gt;closing the read end of the pipe…)"</li>
+<li>Before waiting for child processes to terminate, "(parent_process&gt;waiting for child processes to terminate…)"</li>
+<li>Before exiting, "(parent_process&gt;exiting…)"</li>
+</ul>
+<li>In the 1st child process:</li>
+<ul>
+<li>"(child1&gt;redirecting stdout to the write end of the pipe…)"</li>
+<li>"(child1&gt;going to execute cmd:&nbsp;…)"</li>
+</ul>
+<li>In the 2nd child process:</li>
+<ul>
+<li>"(child2&gt;redirecting stdin to the read end of the pipe…)"</li>
+<li>"(child2&gt;going to execute cmd:&nbsp;…)"</li>
+</ul>
+</ul>
+</ul>
+<ol start="3">
+<li>How does the following affect your program:</li>
+<ol>
+<li>Comment out step 4 in your code (i.e. on the parent process:<strong>do not</strong>&nbsp;Close the write end of the pipe). 
+Compile and run your code. (Also: see "man 7 pipe")</li>
+<li>Undo the change from the last step. Comment out step 7 in your code. Compile and run your code.</li>
+<li>Undo the change from the last step. Comment out step 4 and step 8 in your code. Compile and run your code.</li>
+</ol>
+</ol>
+<p>&nbsp;</p>
+<p><strong>Task 3</strong></p>
+
+<p><strong>Note</strong><br> We again revisit our shell program. Namely, the code you write in this task is added to the shell.</p>
+
+<p>Having learned how to create a pipeline, we now wish to implement a 
+pipeline in our own shell.
+In this task you will extend your shell's capabilities to support 
+pipelines that consist of just one pipe and 2 child processes. 
+</p>
+
+<p>Go back to your shell and add support to a single pipe. Your shell must be able now to run commands 
+like:&nbsp;ls|wc -l&nbsp;which basically counts the number of files/directories under the current working dir. 
+The most important thing to remember about pipes is that the write-end of the pipe needs to be closed in all processes, 
+otherwise the read-end of the pipe will not receive EOF, unless the main process terminates.</p>
+
+<p>Notes:</p>
+<ul>
+<li>The line parser automatically generates a list of cmdLine structures to accommodate pipelines. For instance, when parsing
+ the command&nbsp;<strong>"ls | grep .c"</strong>, two chained cmdLine structures are created, 
+ representing&nbsp;<strong>ls</strong>&nbsp;and&nbsp;<strong>grep</strong>&nbsp;respectively.</li>
+<li>Your shell must support all previous features, including input/output redirection. 
+It is important to note that commands utilizing both I/O redirection and pipelines are indeed quite common 
+(e.g.&nbsp;<strong>"cat &lt; in.txt | tail -n 2 &gt; out.txt"</strong>).</li>
+<li>As in previous tasks, you must keep your program free of memory leaks.</li>
+</ul>
+
+<p><strong>Task 4</strong></p>
+
+<p>Here you will add a history mechanism to your shell. The history 
+mechanism works as follows. Your shell should keep HISTLEN previous 
+command lines
+in a queue, where HISTLEN is a constant with a value of 20 as a default.
+ The history list is maintained in an array of size HISTLEN of pointers 
+to (copies of)
+previous commands. Note that you need to allocate space for these 
+copies. Also note that you should keep the UNPARSED command lines in the
+ history list, and NOT the parsed version.</p>
+<p>
+When a new command line is entered after the history list is full 
+(already has HISTLEN entries), delete the oldest entry and insert the 
+new one.
+You should implement the history as a circular queue, using "newest" and
+ "oldest" indices.
+</p>
+
+<p>The user can now perform the following functions as a shell command (not a process!):</p>
+<ul>
+<li> "history": print the history list (number of entry in the array and the appropriate command line), for all valid entries.</li>
+<li> "!!": retrieve the last command line (non-history, for 
+clarification please refer to lab reading material) CL, enter CL again 
+into the queue, and execute it (needs to be parsed again!).
+</li><li> "!n": With n a number between 1 and HISTLEN, as in "!!" except with CL being the command line at history index n.
+If n is an invalid number (out of range, or no such entry yet) print an error message to stdout and ignore this command line.</li>
+</ul>
+<p>Note that your shell should support history on top of all the other 
+features: pipes, redirection, etc. This should not be hard if your code 
+is well-designed.</p>
+
+
+<p><strong>Submission</strong></p>
+<p>Submit a zip file (named either [student-id-num].zip 
+[student1-id-num_student2-id-num.zip] in case of pair submission) with 
+the following files: task1.c, task2.c task3.c, task4a.c, task4b.c, and a
+ makefile to compile them all.</p>
+<p>Task 4 may be done in a completion lab without grade penalty if you run out of time during the regular lab.</p>
+</body></html>

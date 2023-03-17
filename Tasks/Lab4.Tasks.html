@@ -1,0 +1,167 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><h1>Lab 4: Assembly</h1>
+
+<h3>Lab Goals</h3>
+<ul>
+    <li>Assembly language primer: basic instructions.</li>
+	<li>C calling convention: accessing the function's arguments.</li>
+    <li>Calling C library functions from Assembly code.</li>
+ </ul>
+
+<h1>This lab can be done in pairs!</h1>
+
+<tip title="">
+As usual, you should read and understand the reading material and complete task 0 before attending the lab. <br>
+For this lab you are supposed to use stdlib functions.
+</tip>
+
+
+<h2>Task 0: Basic Command-line Arguments Printing</h2>
+
+<b>Task 0 is crucial for the successful completion of this lab! make sure you finish it and understand it before your lab session.</b>
+<br>
+Read the Assembly lecture <a href="https://moodle.bgu.ac.il/moodle/mod/resource/view.php?id=2299524">Assembly Language Primer</a>.
+For this task you must understand the arguments of main( ), how to 
+access the arguments of a function in assembly language (discussed in 
+class),
+and how to pass arguments to a function in the C calling convention. Be 
+careful not to mess up your stack!
+
+<p>
+In this task you need to write function starting with the (global) label
+ "main" in assembly language which performs the following:
+</p><ul>
+    <li>print <b>argc</b> in decimal format to stdout using printf</li>
+    <li>print <b>argv[0]</b> (the first argument to the main function) to stdout using puts</li>
+</ul>
+<p></p>
+
+Now, write a makefile to compile the assembly code you wrote, and to 
+link the resulting object file with te C standart library (gcc 
+myfile.o). 
+This makefile will be useful throughout the lab.
+
+<h2>Task 1: Extended Arguments Print</h2>
+<p>
+    Task 1 extends Task 0. In this task you need to print <b>argc</b> and all the elements <b>argv</b>. That is you need to
+    write a program that iterates over the array. <br>
+    As in task 0, print argc in decimal format using printf and the elements of argv print using puts.
+</p>
+
+
+<h2>Task 2: Structs and Multi-precision Integer Hexadecimal Printing</h2>
+Read about the difference between little endian and big endian <a href="https://en.wikipedia.org/wiki/Endianness">little vs. big endian</a>.
+<br>
+<p>
+    Implement print_multi(struct multi *p)): gets a pointer to struct multi{unsigned int size; unsigned char num [ ]}
+    where size is the number of bytes in the num array, and the num array is a multi-precision unsigned integer in <b>little endian</b>.
+    The function should print the value of the <b>entire</b> number in hexadecimal by calling printf("%x") once for every byte in the array.
+    <br>
+    <b>Warning: please note that C library functions do not maintain the value of all your registers!</b>
+</p>
+<br>
+Test this by initializing a global struct, as in the following lines, 
+and call print_multi from main with a pointer to the struct
+<dt>  x_struct:  dd  5</dt>
+<dd>  x_num:     db 0xaa, 1,2,0x44,0x4f</dd>
+
+<h2>Task 3: Addition of Multi-Precision integers</h2>
+<h4>Overview</h4>
+In this task you need to implement the function <b>struct multi* add_multi(struct multi *p, *q)</b>;
+<br>
+The function should perform an addition between two such numbers 
+represented as structs, creating a third number represented the same 
+way.
+This is done by byte-wise addition between the two arrays defined in the
+ given structs while maintaining the carry between additions.
+The result should be placed in a newly allocated array in
+a new allocated struct of size 4+max(len1, len2).
+<p>
+    Input: <br>
+    Two arrays <b>array1, array2</b> (defined as variables in the code), of size <b>len1, len2</b> respectively.
+    <br>
+    For example:
+    </p><dt>  x_struct:  dd  5</dt>
+    <dd>  x_num:     db 0xaa, 1,2,0x44,0x4f</dd>
+    <br>
+    <dt>  y_struct:  dd  6</dt>
+    <dd>  y_num:     db 0xaa, 1,2,3,0x44,0x4f</dd>
+<p></p>
+<p>
+    Output: <br>
+    Without loss of generality, assume that len1 &gt; len2. Therefore
+    </p><ul>
+    <li><b>max_len = max(len1,len2)=len1</b></li>
+    <li><b>min_len = min(len1,len2)=len2</b></li>
+    </ul>
+    The function will return an array, dynmically allocated using malloc, <b>result_array</b>, of size <b>max_len</b> such that:
+    <ul>
+        <li><b>result_array[i]=array1[i]+array2[i]+cy</b> for 0 &lt;= i &lt; min_len.</li>
+        <li><b>result_array[i]=array1[i]+cy</b> for min_len &lt;= i &lt; max_len.</li>
+    </ul>
+	cy is the result of the carry from the previous addition.
+<p></p>
+
+<p>
+If you have difficulty doing this with dynamic memory allocation, which uses malloc(size) as in C,
+reserve the array in the data section, to earn 80% of the credit on this task.
+</p>
+
+<h3>Task 3.A: Get MaxMin</h3>
+
+Implement this assembly language function <b>not</b> in the C calling convention.
+Given pointers to number structures in eax and ebx, return the pointer to the one
+with the higher length field in eax, and the other pointer in ebx.
+
+
+<h3>Task 3.B: add_multi Implementation</h3>
+Use the MaxMin function and Print_multi you wrote to implement and test the element-wise addition,
+and print each number to be added and the result in separate lines to stdout.
+<br>
+<p>
+   <b>Test your function by defining appropriate initialized number structs and printing the resulting array.</b>
+</p>
+<h5>Example</h5>
+For the following structs:
+<dt>x_struct: dd 6</dt>
+<dd>x_val: db 1,0xf0,1,2,0x44,0x4f</dd>
+
+<dt>y_struct: dd 5</dt>
+<dd>y_val: db 1,1,2,0x44,1</dd>
+
+Printing the result array should produce:
+<br>
+2
+<br>
+F1 (which is 0xf1)
+<br>
+3
+<br>
+46 (which is 0x46)
+<br>
+45 (which is 0x45)
+<br>
+4F (which is 0x4f)
+
+<h2>Task 4: Pseudo-Random Number Generator</h2>
+Implement a function name <b>rand_num</b> that uses basic assembly insturction in order to generate a random number using a "linear-feedback shift register".
+See <a href="https://en.wikipedia.org/wiki/Linear-feedback_shift_register">LFSR in Wikipedia</a>
+The function uses a global initialized (not to zero!) unsigned 16-bit (word) STATE variable, and a constant MASK variable.
+Use the mask for the Fibonacci LFSR for 16 bits.
+Each pseudo-random operation does:
+<ul>
+<li> Use the MASK to get just the relevant bits of the STATE variable.
+</li><li> Compute the parity of the above relevant bits.
+</li><li> Shift the bits of the (non-maked) STATE variable one position 
+to the right, with the MSB determined by the parity you just computed.
+</li></ul>
+<br>
+Test your function by printing 20 consecutive generated pseudo-random numbers in hexadecimal using printf.
+<br>
+
+<h2> Submission </h2>
+Task 1-3 are mandatory and task 4 can be completed later on in the completion lab.
+<br>
+You are required to submit a zip file in the format [your_id].zip that will conatain a folder for each task and each folder will
+contain the assembly code file and the corresponding makefile.
+</body></html>

@@ -1,0 +1,380 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body>
+
+
+
+
+    
+
+    
+    
+
+ 
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<stdlib.h><h1>Program Memory and Pointers, Debugging and Simulating Object Oriented Programming</h1>
+
+<p>
+<b>Lab goals</b>: 
+</p><ul>
+<li> C primer - continued
+</li><li> Understanding storage addresses, introduction to pointers
+</li><li> Pointers to basic data types, to structures, and to functions
+</li><li> Simulating object-like behavior in C
+</li></ul>
+
+<p>
+</p><h1>(This lab is to be done SOLO)</h1>
+
+   <h2>Task 0: Using <tt>gdb(1)</tt> to debug segmentation fault</h2>
+    <p><i>You should finish this task <b>before</b> attending the lab session.</i></p>
+
+    <p>C is a low-level language. Execution of a buggy C program may
+    cause its abnormal termination due to <i>segmentation fault</i> ---
+    illegal access to a memory address. Debugging segmentation faults can
+    be a laborious task.</p>
+    <p><tt>gdb(1)</tt>, the <a href="https://moodle.bgu.ac.il/moodle/mod/resource/view.php?id=2285547">GNU Debugger</a>, is a powerful tool for program debugging and
+    inspection. When a program is compiled for debugging and run inside
+    gdb, the exact location of segmentation fault can be determined. In
+    addition, the state of the processor registers and values of the
+    variables at the time of the fault can be examined.</p>
+    <p>The source code for a buggy program, <tt>count-words</tt>, is
+    provided in file <a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3684509/mod_resource/content/1/count-words.c">count-words.c</a>. The program works
+    correctly most of the time, but when called with a single word on the
+    command line, terminates due to segmentation fault.</p>
+
+    <ol>
+      <li>Write a Makefile for the program.</li>
+      <li><b>Specify compilation flags appropriate for debugging using</b> <tt>gdb</tt>.</li>
+      <li>Find the location and the cause of the segmentation fault using <tt>gdb</tt>.</li>
+      <li>Fix the bug and make sure the program works correctly.</li>
+
+    </ol>
+ <hr><b>The tasks below are to be done only during the lab session! Any code written before the lab will not be accepted.</b><warn title="The tasks below are to be done only during the lab session! Any code written before the lab will not be accepted.">
+</warn>
+<h2>Task 1: Understanding memory addresses and pointers</h2>
+    <p>Logical virtual memory layout of a process is fixed in Linux. One can guess from the numerical
+    value of a memory address whether the address points to:</p>
+    <ul>
+      <li>a static or a global variable,</li>
+      <li>a local variable or a function argument,</li>
+      <li>a function.</li>
+    </ul>
+
+
+<h3>T1a - Addresses</h3>
+<p>Read, compile and run the <a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3698062/mod_resource/content/1/addresses.c">addresses.c</a> program (<b>remember to use the <i>-m32</i> flag</b>).<br>
+Can you tell the location (stack, code, etc.) of each memory address?<br>
+What can you say about the numerical values? Do they obey a particular order?<br>
+<br>
+Check <b>long</b> data size on your machine using <i>sizeof</i> operator. Is <i>long integer</i> data type enough for <b>dist</b> (address difference) variables ?  
+</p>
+
+<h3> T1b - Arrays memory layout </h3>
+In this task we will examine the memory layout of arrays.
+<br>
+Define four arrays of length 3 as shown below <i>in the function main</i> and print the memory address of each array cell.
+<br><code numbers="false" lang="cpp">
+<br>int iarray[3];
+<br>float farray[3];
+<br>double darray[3];
+<br>char carray[3];
+
+</code><br><br>
+
+Print the hexadecimal values of <b> iarray, iarray+1, farray, farray+1, darray, darray+1, carray and carray+1</b> (the values of these pointers, <b>not</b> the values pointed by the pointers). What can you say about the behavior of the '+' operator?
+ <br><br>Given the results, explain to the TA the memory layout of arrays.<h3>T1c - Distances</h3>
+Understand and explain to the TA the purpose of the distances printed in the point_at function.
+<br>
+Where is each memory address allocated and what does it have to do with the printed distance?
+
+
+Given the results, explain to the TA the memory layout of arrays.<br>
+
+<h3> T1d - Pointers and arrays </h3>Array names are essentially pointer constants. Instead of using the arrays, use the pointers below to access array cells.
+<br><code numbers="false" lang="cpp">
+int iarray[] = {1,2,3};
+<br>char carray[] = {'a','b','c'};
+<br>int* iarrayPtr;
+<br>char* carrayPtr;
+</code><br><br>
+Initialize the pointers iarrayPtr and carrayPtr to point to the first 
+cell of the arrays iarray and carray respectively. Use the two pointers 
+(iarrayPtr,carrayPtr) to print all the values of the two arrays.
+<br><br>
+Add an uninitialized pointer local variable p, and print its value (not the value it points to). What did you observe?
+
+
+<h2>Task 2 - Structs and pointers to functions</h2>Let us recall the following definition:<ul><li><b>Pointers to functions</b>
+ - C allows declaring pointers to functions. The syntax is: <code>function_return_type (*pointer_name)(arguments_list);</code>  for simple types of return value and arguments. You can read more about pointers to functions <a href="http://en.wikibooks.org/wiki/C_Programming/Pointers_and_arrays#Pointers_to_Functions">here</a>.</li>
+</ul><br>The  base.c file is the base file for task 2 - you should complete it as stated in the sub tasks.
+
+
+<ul>
+<li>Please read the Deliverables section before continuing.</li>
+</ul>
+
+
+
+<h3>Task 2a </h3>Implement the map function that receives a pointer to a
+ char (a pointer to a char array), an integer, and a pointer to a 
+function. Map returns a new array (after allocating space for it), such 
+that each value in the new array is the result of applying the function f
+ on the corresponding character in the input array.
+<ul>1. char* map(char *array, int array_length, char (*f) (char))</ul>
+<br>Example:
+<br><br>
+<code>
+    char arr1[] = {'H','E','Y','!'};
+    <br>char* arr2 = map(arr1, 4, censor);
+    <br>printf("%s\n", arr2);
+    <br>free(arr2);
+</code>
+<br><br>
+Results:
+<br>HEY.
+<ul><li>
+    Do not forget to free allocated memory.
+</li></ul>
+
+
+
+<h3>Task 2b</h3>
+Implement the following functions.
+<br><br>
+<code numbers="false" lang="cpp">
+    char my_get(char c); 
+    <br>/* Ignores c, reads and returns a character from stdin using fgetc. */
+    <br><br>char cprt(char c); 
+    <br>/* If c is a number between 0x20 and 0x7E, cprt prints the 
+character of ASCII value c followed by a new line. Otherwise, cprt 
+prints the dot ('.') character. After printing, cprt returns 
+the value of c unchanged. */
+    <br><br>char encrypt(char c); 
+    <br>/* Gets a char c and returns its encrypted form by adding 3 to 
+its value. If c is not between 0x20 and 0x7E it is returned unchanged */
+    <br><br>char decrypt(char c); 
+    <br>/* Gets a char c and returns its decrypted form by reducing 3 to
+ its value. If c is not between 0x20 and 0x7E it is returned unchanged 
+*/
+    <br><br>char xprt(char c); 
+    <br>/* xprt prints the value of c in a hexadecimal representation followed by a new line, and returns c unchanged. */
+</code><br><br>
+Pay attention that array length is constant i.e. if the initial array is
+ of length 5, then the new array that we receive with my_get function is
+ of the same length.
+<br><br>
+Example: 
+<br><code numbers="false" lang="cpp">
+<br>int base_len = 5;
+<br>char arr1[base_len];
+<br>char* arr2 = map(arr1, base_len, my_get);
+<br>char* arr3 = map(arr2, base_len, cprt);
+<br>char* arr4 = map(arr3, base_len, xprt);
+<br>char* arr5 = map(arr4, base_len, encrypt);
+<br>char* arr6 = map(arr5, base_len, decrypt);
+<br>free(arr2);
+<br>free(arr3);
+<br>free(arr4);
+<br>free(arr5);
+<br>free(arr6);
+</code>
+<br>Result:
+<br>
+<code numbers="false">
+<br>Hey! // this is the user input.
+<br>H
+<br>e
+<br>y
+<br>!
+<br>.
+<br>48
+<br>65
+<br>79
+<br>21
+<br>.
+</code>
+
+<ul>
+  <li>Do not forget to free allocated memory.</li>
+  <li>There is no need to encrypt/decrypt letters in a cyclic manner, simply add/reduce 3.</li>
+</ul>
+
+<h3>T2c - Adding an option to exit</h3>
+Implement the following function:
+<br>
+<code numbers="false" lang="cpp">
+char quit(char c); 
+    <br>/* Gets a char c,  and if the char is 'q' , ends the program with exit code 0. Otherwise returns c. */
+</code><br><br>
+This function terminates the program "normally" and "successfully" using the <i>exit</i> function (as mentioned in the lab's reading material). The use of such a function will be clarified in task 3.
+
+<h3>Task 3 - Menu</h3><ul>
+    <li>
+        <b>struct</b>
+         - A struct in the C programming language is a structured type 
+that aggregates a fixed set of labeled items, possibly of different 
+types, into a single entity similar to an "object". \\
+The struct size equals the sum of the sizes of its objects plus 
+alignment (if needed). You can get the size by using the <b>sizeof</b>  operator as follows: sizeof(struct struct_name).
+    </li>
+</ul><p>
+A function pointer can be a field in a structure, thus several functions
+ can be accessed through a single data structure or container.
+<br><br>
+An array of function descriptors, each represented by a structure 
+holding the function name (or description) and a pointer to the 
+function, can be used to implement a program menu. Using the following 
+structure definition:
+<br><br>
+<code numbers="false" lang="cpp">
+struct fun_desc {
+  <br> char *name;
+  <br> char (*fun)(char);
+<br>};
+</code>
+<br><br>
+Alternatively, you can define this as a "typedef".
+<br><br>
+Below is an example of declaration and initialization of a two-element array of "function descriptors":
+<br><br>
+<code numbers="false" lang="cpp">
+    struct fun_desc menu[] = { { "hello", hello }, { "bye", bye }, { NULL, NULL } };
+</code>
+<br><br>
+Using the code from 2c, write a program called <tt>menu</tt> that performs the following.
+</p><ol>
+    <li>
+       Defines a pointer 'carray' to a char array of length 5, initialized to the empty string (how?).
+    </li>
+    <li>
+        Defines an array of fun_desc and initializes it (in the 
+declaration, not as program code within a function) to the names and the
+ pointers of the functions that you implemented in Task 2. The last 
+fun_desc in the array should contain a null pointer name and a null 
+pointer to function (<b>the length of the array should not be kept explicitly after constructing it</b>).
+    </li>
+    <li>
+        Displays a menu (as a numbered list) of names (or descriptions) 
+of the functions contained in the array. The menu should be printed by 
+looping over the menu item names from the fun_desc, <b>not</b> by printing a string (or strings) that contain a copy of the name.
+    </li>
+    <li>
+        Displays a prompt asking the user to choose a function by its 
+number in the menu, reads the number, and checks if it is within bounds.
+ The bound should be pre-computed only <b>once</b>, and <b>before</b> 
+the loop where the prompt is printed. If the number is within bounds, 
+"Within bounds" is printed, otherwise "Not within bounds" is printed and
+ the program exits gracefully.
+    </li>
+    <li>
+        Evaluate the appropriate function over 'carray' (using map) 
+according to the number entered by the user. Note that you should call 
+the function by using the function pointer in the array of structures, 
+and not by using "if" or "switch".
+    </li>
+    <li>
+        After calling any menu function (other than 'quit'), let 'carray' point to the new array returned by map( ).
+    </li>
+</ol><br> Press here for examples - <a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3684573/mod_resource/content/1/Task3-Examples.txt">Task3-Examples</a>
+
+<br><br>
+Is it possible to call a function at an invalid address in your version of the program?<br>
+
+<p></p><p>
+
+<b>Bonus item (0 points)</b> Add a menu item for "junk", where the pointer to function is
+initialized to point to something that is not known function code, such as your fun_desc array. Compile and
+run the modified program, and select the junk menu item. What do you observe?
+<br><br>
+<b>the quit function</b>
+<br><br>
+In task 2c we have defined the quit function as a function that gets and
+ returns a char. This is an unusual implementation, however, it enabled 
+us to nicely add a quit option to the menu that follows the same 
+architecture of the assignment. We did not have to explicitly write a 
+separate menu item for the quit option. Be that as it may, notice that 
+it is a quick and dirty "trick" and it is <b>not</b> the generally recommended way of constructing menus.
+</p><ul>
+  <li>Instead of performing the actions one at a time, save all the 
+chosen actions in an array (of size 10), then when the user chooses to 
+quit, carry out all the actions and quit. (To be done only if you need a
+ "special" alteration.)</li>
+</ul>
+<h2>Deliverables</h2><p>
+
+As for all labs, you should complete task 0 before the lab, and make sure you understand what you did. 
+<br><br>During the lab, you should complete at least task 1 and 2 and as
+ much as possible from task 3. If you cannot finish task 3 before the 
+end of the lab, you should complete it during a make-up lab. 
+<br><br>There is no penalty for not completing task 3 during the first 
+lab session, provided you came prepared, on time, and worked seriously 
+on the tasks for the entire duration of the lab.
+<br><br>The deliverables must be submitted until the end of the day.<br>
+<br>You must submit source files for task2C and task3 in respective 
+folders, and also a makefile that compiles them. The source files must 
+be organized in the following tree structure (where '+' represents a 
+folder and '-' represents a file):<br>
++ task2C<br>
+&nbsp;&nbsp;&nbsp;- makefile<br>
+&nbsp;&nbsp;&nbsp;- menu_map.c<br>
++ task3<br>
+&nbsp;&nbsp;&nbsp;- makefile<br>
+&nbsp;&nbsp;&nbsp;- menu_map.c<br>
+
+</p><h4> Submission instructions</h4>
+<ul>
+<li>
+Create a zip file with the relevant files (only).
+</li>
+<li>
+Upload zip file to the submission system.
+</li>
+<li>
+Download the zip file from the submission system and extract its content to an empty folder.
+</li>
+<li>
+Compile and test the code to make sure that it still works.
+</li>
+</ul>
+</stdlib.h></body></html>

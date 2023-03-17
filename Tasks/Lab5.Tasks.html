@@ -1,0 +1,290 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><h1>Lab 5: Assembly cont. And System Calls</h1>
+
+<h3>Lab Goals</h3>
+<ul>
+    <li>To get acquainted with the low-level interface to system calls.</li>
+    <li>To understand how programs can work without the standard library.</li>
+    <li>Calling assmebly code from C.</li>
+    <li>Basics of directory listings.</li>
+ </ul>
+
+<h1>This lab can be done in pairs!</h1>
+
+<tip title="">
+As usual, you should read and understand the reading material and complete task 0 before attending the lab. <br>
+<b>For the entire lab, do not use the standard library!
+This means you shouldn't include stdio.h, stdlib.h, or any other file 
+from the C standard library. You can, however, include your own files or
+ any files we provide you.
+    This also means that you cannot use any library functions like 
+printf, fopen, fgetc, strcmp, etc.</b>
+
+</tip>
+
+<h2>Task 0: Using nasm, ld and the Arguments Printing Program</h2>
+In this task we will build a program which prints its arguments to standard output without using the standard C library.
+
+
+<h3>Task 0.A: C Implementation</h3>
+<ol>
+  <li>Download the files main.c, start.s, util.c and util.h.</li>
+  <li>Compile and link them without using the C standard library as follows:
+    <ul>
+      <li>
+          Assemble the glue code:<br>
+          nasm -f elf32 start.s -o start.o
+      </li>
+        <li>
+            Compile the main.c and util.c files into object code files:<br>
+            gcc -m32 -Wall -ansi -c -nostdlib -fno-stack-protector util.c -o util.o<br>
+            gcc -m32 -Wall -ansi -c -nostdlib -fno-stack-protector main.c -o main.o
+        </li>
+        <li>
+            Link everything together:<br>
+            ld -m elf_i386 start.o main.o util.o -o task0
+        </li>
+    </ul>
+  </li>
+    <li>Write a makefile to perform the compilation steps automatically.</li>
+    <li>Write a new main.c that prints the elements of argv to the standard output, without using stdlib.</li>
+</ol>
+
+<b>Explanation</b>
+<br>
+The file "start.s" has two purposes:
+<br>
+<ol>
+    <li>
+        Each executable must have an entry point - the position in the 
+code where execution starts.
+        By default, the linker sets this entry point to be a library 
+supplied code or function that begins at _start.
+        This code is responsible for initializing the program. After 
+initialization, this code passes control to the main() function.
+        Since we are not using any standard libraries,  we must supply 
+the linker with _start of our own - which is defined in start.s.
+    </li>
+    <li>
+        The assembly-language source code in start.s also contains the 
+system_call function,
+        which is used to get a direct system call without requiring you 
+to write in assembly language.
+        Note that you can link files written in different languages: an 
+object file is an object file, no matter where it came from.
+        All is machine code at some point!
+    </li>
+</ol>
+
+<h3>Task 0.B: Assembly Implementation</h3>
+Recall task 1 from lab 4, where you implemeted the same program of 
+arguments print. Use the code from lab 4 and instead of calling
+printf perform the printing functionality using system calls. Note that 
+you can you the same makefile as in lab 4. For this sub-task you
+need to read about argument passing to a system call in assembly.
+
+<h3>Task 0.C: Recalling encoder from lab 1</h3>
+
+<p>Make sure you have a <b>good</b> implementation in C of the encoder 
+from lab 1, in the sense that it has handled the tasks
+with a good understanding of low-level features. 
+That is because later on in the lab you will need to implement a 
+simplified form in assembly language with direct system calls.
+A good low-level C implementation will make the task immediate, whereas 
+an implementation without a care for details and
+understanding of low-level features (e.g. what is the end of a 
+"string"?) will be extremely unhelpful. Consider that any place you have
+ used
+"strlen", "strcpy", strcmp", and especially if you did something like 
+"strlen{encoding)%i" you are <b>not</b> well prepared.</p>
+
+<p>If you <b>do not</b> have a good implementation of the encoder from lab 1, consider the following advice. You may also
+borrow lab 1 solutions in C from other people (<b>only</b>) as preparation for lab 5, but of course you should say your implementation is based on
+(appropriate citation) C code from another source. In this instance only this is permitted and will cause no grade reduction!
+If, on the other hand, you <b>do</b> have a good low level implementation of the encoder from lab 1, this task 0.C can be considered a "nop",
+and ignore the rest of task 0.C.
+That is, you are ready in this aspect due to a previously well done job! (As the saying goes <b>"Mi She Tarakh Be Erev Shabat, Yokhal Be Shabat"</b>).</p>
+
+<h4>Low-level encoder tips</h4>
+
+A good low-level implementation of the encode is easy to transfer to assembly language. Good is according to the tips below:
+<ol>
+<li> Note that you never need to "copy" a "string" in this task. Rather 
+you can always maintain a pointer to its start,
+as do not need to modify such "strings". Therefore, you should not be 
+copying any such, and certainly not use "strcpy". See next tip.</li>
+<li>Recall that a "string" is simply an array of bytes, and that a 
+pointer can be seen as a reference to the array,
+or any part thereof if it is advanced. So no need to use "strcmp" to 
+detect command-line flags. For example, to do the output file case,
+can simply do in the loop on arguments:
+<pre>   char * OutFileName;
+   FILE * OutFile;
+   if(av[i][0] == '-' &amp;&amp; av[i][1] == 'O') {  /* Can actually be done in 1 instruction, e.g.:  CMP word [eax], '-'+(256*'O')  ; equivalently "-O" */
+       OutFileName = (av[i])+2;
+	   OutFile = fopen(OutFileName, "w");
+	   if(Outfile == NULL) { /* error, print "cannot open file" and exit */}
+   }
+</pre>
+</li>
+<li> To find the start of the encoding string, same (av[i])+2 as above works:
+<pre>   unsigned char * EncoderString, * CurrentEncodeP, EncodeByte;
+    if(av[i][0] == '+' &amp;&amp; av[i][1] == 'e') {
+       CurrentEncodeP = EncoderString = (av[i])+2;
+	   if(*EncoderString == 0) /* Error, null encoder string, exit */
+   }
+   /* And then, later on, after getting each character c: */
+   EncodeByte = (*CurrentEncodeP)-'0';
+   c += EncodeByte;
+   CurrentEncodeP++;
+   /* And then below wrap around to start at null termination */
+   if(*CurrentEncodeP == 0) { CurrentEncodeP = EncoderString; }  
+</pre>
+</li>
+</ol>
+
+
+
+
+<h2>Task 1: Encryption In Assembly</h2>
+<b style="color:blue">All of the code in this task supposed to be written in assembly. Including argument parsing.</b>
+<br>
+Recall the encryption in the encoder program from lab 1 (a long time ago!). We want to implement the <b>encryption</b> program in <b>assembly using system calls</b>.
+<br>
+The encryption program should support the following command-line arguments:
+<ul>
+    <li>+e{key} (just + this time, no need to implement the -e{key} option).</li>
+    <li>-i{file} - get input from the given file.</li>
+    <li>-o{file} - direct output to the given file.</li>
+</ul>
+<h3>Task 1.A: Basic Encryption Version</h3>
+In this section you are required to implement the encoder program while supporting the command line argument of
++e{key}, the input\output are from\to stdin\stdout (use the appropriate system calls for reading or writing). <b style="color:blue">
+    If +e{key} argument is not provided the input is not changed!.
+</b>
+
+<h3>Task 1.B: Encryption With Input and Output Support</h3>
+Add to your program the option of the following command line arguments:
+<ul>
+    <li>-i{file} - get input from the given file.</li>
+    <li>-o{file} - direct output to the given file.</li>
+</ul>
+
+
+<h3>Task 2: Attach Virus Program</h3>
+Many computer viruses attach themselves to executable files that may be part of legitimate programs.
+If a user attempts to launch an infected program, the virus code is executed before the infected program code.
+The goal is to write a program that attaches its code to files in the current directory.
+<p>
+    <b>
+        In this task you are required to write both in C and assembly. 
+Your C program should call sys_getdents in order to get all the entries
+        in the current directory and print them, and when the -a{prefix}
+ argument is provided should call assembly functions that will
+        attach the executable code to the desired files.
+    </b>
+</p>
+<br>
+In this task you are required to implement the following program:
+<br>
+<p>
+<b>DESCRIPTION</b>
+<br>
+Print all the file names in the current directory.
+</p>
+<p>
+<b>COMMAND-LINE ARGUMENT</b>
+<br>
+<b>-a{prefix}</b>
+<br>
+Attach the executable code (be discussed more below) at the end of each 
+file in the current directory that begins with the given prefix.
+For every file changed you should print a message to the user, i.e., 
+when printing the file name as a part of the file list add a print 
+comment
+<b>"VIRUS ATTACHED"</b> next to the file name.
+</p>
+
+
+<h4>Some guidelines</h4>
+<ol>
+    <li>Your program should use the <b>sys_getdents [141]</b> system call.</li>
+    <li>The declarations of the dirent type constants can be found in the file dirent.h</li>
+    <li>Please note that the first argument for getdents is a file
+        descriptor open for reading - it should be for the file "." that represents the current directory.</li>
+    <li>In case of an error, the program should terminate with exit code 0x55.</li>
+    <li>To make things easier, you may assume that the entire directory data (returned by the getdents call) is smaller than 8192 bytes.</li>
+    <li>Dont forget not to use any standard library functions!.
+        Instead, in "util.h" and "util.c", you can find few implementation
+        for some helpful functions. You may use them.</li>
+</ol>
+
+<b>Warning:</b> You probably want to be very sure that the mechanism for
+ selecting files works correctly at this point,
+e.g. you may not want the program to operate on your C source code 
+files, etc. Be careful not to destroy your own source code files!
+<br>
+<br>
+<b>The following contains code you need to write in assembly language.</b>
+<ol>
+    <li>Starting assembly language implementation: begin with a label "code_start".</li>
+    <li>Write a function <b style="color:red;"> void infection(int)</b> 
+that prints to
+        the screen the message "Hello, Infected File".
+        Note: this should be done using just one system call! If you 
+have too many lines of code here then you are doing something wrong!</li>
+    <li>Write a function <b style="color:red"> void infector(char *)</b>
+ that opens the file named in its argument,
+        and adds the executable code from "code_start" to "code_end" 
+after the end of that file,
+        and closes the file. Note: this should be done using just a few 
+system calls: open (for append),
+        write, close, each using less than 10 lines of assembly code. 
+Again, if your code is longer then you are doing something wrong!</li>
+    <li>End infected program part with a label "code_end".</li>
+    <li>When the flag -a{prefix} is supplied,
+        it will call the infector functions in order to add the 
+executable code of infection to
+        the end of each file with the given prefix. Also, this option 
+will print out a comment such as "VIRUS ATTACHED" next to each file with
+        the given prefix (this print will be performed in the C 
+program).</li>
+</ol>
+<br>
+<b>Note: it is recommended to open the file with the append option. You <b>may</b> open for reading/writing rather than append, but then you will have to
+perform the lseek system call to the end of the file.
+</b>
+<br>
+<br>
+<b>Note for assembly language implementation:</b> The part of the code 
+that is responsible for actual file handling
+(i.e. opening the file, adding the executable code of the infection , 
+etc.) should be written in assembly
+language and done inside the file "start.s". You can add the code after 
+the end of the code for system_call.
+You can either call the system_call code (note that it uses C calling 
+conventions, as until now you used it through function-calls from C),
+or re-use part of it to do the system call yourself (shorter and 
+simpler!).
+Also, it is a good idea to test your infection() function first, before 
+proceeding to infector().
+<br>
+<br>
+Test your implementation on at least two files. You can use your previous lab solutions as input.
+Use the command <b style="color:red"> chmod u+wx {filename}</b> to give user write/execute permissions.
+
+<h2>Submission</h2>
+Task 1 and Task 2 (without -a option) are mandatory for this lab. You 
+can complete the -a option in task 2 later on in the completion
+lab.
+<br>
+You are required to submit a zip file named [your id].zip that contains the following:
+<dt>+ task1</dt>
+<dd>- start.s</dd>
+<dd>- makefile</dd>
+<dt>+ task2</dt>
+<dd>- main.c</dd>
+<dd>- start.s</dd>
+<dd>- makefile</dd>
+
+</body></html>

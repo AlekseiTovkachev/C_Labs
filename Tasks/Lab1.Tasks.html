@@ -1,0 +1,469 @@
+<!-- saved from url=(0107)file:///C:/Users/t-abadash/Documents/university/%D7%90%D7%A8%D7%9B%D7%99/labs/lab1/Lab1.Tasks.students.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><h1>Introduction to C Programming in a Unix (Linux 32 bits) Environment</h1>
+
+<p> <b>Lab goals</b>: 
+</p><ul>
+<li> C primer
+</li><li> Parsing command-line arguments
+</li><li> Undestanding character encoding (ASCII)
+</li><li> Implementing a debug mode for your program
+</li><li> Introduction to standard streams (stdin, stdout, stderr)
+</li><li> Simple stream IO library functions
+</li></ul>
+
+<p>
+</p><h1>(This lab is to be done SOLO) </h1>
+
+
+  <h2>Task 0: Maintaining a project using <tt>make</tt></h2>
+<p>You should perform this task <b>before</b> attending the lab session.
+  For this task, 3 files are provided: <a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3648975/mod_resource/content/1/add.s">add.s</a>, <a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3649133/mod_resource/content/1/main.c">main.c</a>, <a href="https://moodle.bgu.ac.il/moodle/pluginfile.php/3649134/mod_resource/content/1/numbers.c">numbers.c</a>.
+  </p>The first file is assembly language code, and the other 2 are C source code.
+<p></p>
+
+<ol> 
+  <li>Log in to Linux.</li>
+  <li>Decide on an ASCII text editor of your choice (vi, emacs, kate, pico, nano, femto, or whatever). It is <b>your responsibility</b> to know how to operate
+   the text editor well enough for all tasks in all labs.
+  </li><li>
+    Using the text editor that you decided to use, write a makefile for the given files (as explained in 
+    the introduction to GNU Make Manual, see the
+    [[lab1/reading|Reading Material]]).
+    The Makefile should provide targets for compiling the program 
+    and cleaning up the working directory. 
+  </li>
+
+  <li>
+    Compile the project by executing make in the console.
+  </li>
+
+  <li>
+    Read all of lab1 reading material before attending the lab, and make sure you <b>understand</b> it. This may entail writing simple code to exercise the use of library functions and
+running it, in addition to any other task 0 code you are <b>required</b> to write.
+  </li>
+  
+  <li>
+    Read the puts(3) and printf(3) manuals. What is the difference between the functions?
+    To read the manuals type man followed by the function name (e.g.  <code>man puts</code>) in a "console".
+  </li>
+</ol>
+<h3> Important </h3>
+
+To protect your files from being viewed or copied by other people, 
+thereby possibly earning you a disciplinary hearing, employ the Linux 
+permission system by running:
+<code>
+chmod 700 -R ~
+</code>
+
+In order to make sure you have sufficient space in your workspace,
+run the following command once you're logged in
+
+<code>
+du -a | sort -n
+</code>
+
+Then you can see a list of your files/directories
+and the amount of space each file/directory takes.
+
+If you need space and KNOW which files to remove, you can do that by:
+<code>
+rm -f [filename]
+</code>
+
+<h3>Control+D, Control+C and Control+Z</h3>
+<ul>
+    <li>What does Control+D (^D) do?</li>
+    <li>What does Control+C (^C) do?</li>
+    <li>What does Control+Z (^Z) do?</li>
+</ul>
+Do not use Control+Z for terminating processes!!!
+<h3>Writing a simple program</h3>
+Write a simple echo program named my_echo: <br>
+<dl>
+  <dt> NAME </dt>
+  <dd> my_echo - echoes text.</dd>
+  <dt> SYNOPSIS </dt>
+  <dd> my_echo </dd>
+  <dt> DESCRIPTION </dt>
+  <dd> my_echo prints out the text given in the command line by the user.
+  </dd>  
+  <dt> EXAMPLES </dt>
+  <dd>
+    <code>
+#&gt; my_echo aa b c
+    </code>
+    
+  </dd><dd>
+    <code>
+#&gt; aa b c
+    </code>
+</dd></dl>
+
+<h4> Mandatory requirements</h4>
+<ul>
+  <li>
+    Create a proper makefile as described in the reading material. </li>
+  <li> Test your program to see that it actually works...
+  </li>
+</ul>
+
+
+<warn title="The tasks below are to be done only during the lab session!">
+Students coming with ready code "from home" will be assigned low priority <b>and</b> will have
+to demonstrate re-writing all the code again <b>from scratch</b>.
+Additionally, you are expected (of course) to understand your code completely.
+</warn>
+
+
+<h3> On this lab you can assume that the resulting encrypted char will always be in the range from 32 to 126 (inclusive). </h3>
+
+
+<h2>Task 1: The encoder program</h2>
+
+In this task we will write a program that encodes characters from the input text.
+<br>As stated in task 0 and the reading material, you should already have consulted
+   the man pages for <b>strncmp(3), fgetc(3), fputc(3), fopen(3), fclose(3)</b> before the lab.
+      <br> 
+Task 1 consists of three subtasks: 1a, 1b, 1c and 1d, each building on 
+top of the previous subtask. Therefore, your program for each task 
+should contain all the features from the previous tasks.<br><br>
+      
+
+
+
+  <!-- ---------------- T A S K   1 A -------------------- -->
+<h3>Task 1a: A restricted encoder version - conversion to uppercase </h3>
+
+The encoder program should be implemented as follows:<br>
+
+<dl>
+  <dt> NAME </dt>
+  <dd> encoder - encodes the input text as uppercase letters.</dd>
+  <dt> SYNOPSIS </dt>
+  <dd> encoder </dd>
+  <dt> DESCRIPTION </dt>
+  <dd> 
+      encoder reads the characters from standard input and prints the 
+corresponding uppercase characters to the standard output. Non lowercase
+ characters remain unchanged.
+  </dd>
+  <dt> EXAMPLES </dt>
+  <dd>
+    <code>
+#&gt; encoder
+<br>Hi, my name is Noah<br>
+    </code>
+  </dd>
+ <dd>
+     <code>
+         #&gt; HI, MY NAME IS NOAH
+     </code>
+ </dd> 
+ <dd>
+     <code>
+         #&gt; ^D
+     </code>
+ </dd>
+ <dd>
+     <code>
+         #&gt;
+     </code>
+ </dd><dd>
+</dd><dd>
+</dd></dl>
+
+<h4> Information</h4>
+<ul>
+<li>
+    stdin and stdout are FILE* constants than can be used with fgetc and fputc.
+  </li>
+  <li>
+    Make sure you know how to recognize end of file (<i> EOF </i>).
+  </li>
+  <li>
+    Control-D causes the Unix terminal driver to signal the EOF 
+condition to the process running in this terminal foreground, using this
+ key combination (shown in the above example as ^D) will cause <i>fgetc</i> to return an <i>EOF</i> constant and in response your program should terminate itself "normally".
+  </li>
+<li> Refer to <a href="http://www.asciitable.com/">ASCII</a> table for more information on how to convert characters to lower-case or upper-case. </li>
+</ul>
+
+<h4> Mandatory requirements</h4>
+<ul>
+<li>You must read and process the input <b>character by character</b>, there is no need to store the characters you read at all.</li>
+  <li> Important - you cannot make any assumption about the line length. </li>
+  <li> Check whether a character is an lowercase letter by using a single "if" statement with two conditions. How?</li>
+  <li>You are <b>not</b> allowed to use any library function for the purpose of recognizing whether a character is a letter, and its case.</li>
+</ul>
+
+
+<!-- ---------------- T A S K   1 B 2020 -------------------- -->
+<h3> Task 1b: Extending the encoder to support debug mode </h3>
+
+<p>
+As you develop a program, it is important to allow for easy debugging.
+The debug mode which you introduce here explains this idea. Using this 
+scheme, any program can be run in a debug mode that allows special 
+debugging features for testing the program. As a minimum, implemented 
+here, when in debug mode the program prints out important information to
+ stderr. Printing out the command-line
+parameters allows for easy detection of errors in retrieving them.
+Henceforth, code you write in most labs will also require adding a debug
+ mode, and it is a good idea to have this option in <b>all</b> programs you write, even if <b>not required</b> to do so!
+</p>
+ 
+<dl>
+  <dt> NAME </dt> <dd> encoder - encodes the input text as hexadecimal values.</dd>
+  <dt> SYNOPSIS </dt>
+  <dd> encoder [OPTION]... </dd>
+  <dt> DESCRIPTION </dt>
+  <dd>
+  encoder receives text characters from standard input and prints the 
+corresponding uppercase charachters to the standard output.<br>
+  The debug mode is activated via command-line argument (-D).<br>
+  If the debug-mode is activated, print the command-line arguments to <b>stderr</b> and each character you recieve from the input (hexadecimal value) before and after the conversion.<br>
+  <b>regardless</b> of the debug-mode, the encoder will convert characters into uppercase.<br>
+
+  </dd>
+
+  <dd>
+
+    </dd><dt> EXAMPLES </dt>
+  <dd>
+    <code>
+#&gt; encoder -D
+<br>-D
+<br>Hi, my name is Noah
+<br>48	48
+<br>69	49
+<br>2C	2C
+<br>20	20
+<br>60	40
+<br>79	59
+<br>20	20
+<br>6E	4E
+<br>61	41
+<br>6D	4D
+<br>65	45
+<br>20	20
+<br>69	49
+<br>73	53
+<br>20	20
+<br>4E	4E
+<br>6F	4F
+<br>61	41
+<br>68	48
+<br>
+<br>HI, MY NAME IS NOAH
+<br>^D
+<br>#&gt;
+</code> 
+    <li>Note: the left colomn is the hexadecimal representation of the <b>input</b> characters whereas the right colomn is the hexadecimal representation of the <b>modified</b> characters (in this case switched from lower-case to upper-case)</li>
+
+  </dd>
+</dl>
+
+<h4> Mandatory requirements</h4>
+<ul>
+
+<li>You are <b>not</b> allowed to use any library function for the purpose of recognizing whether a character is a letter and its case.</li>
+  <li> 
+    Read your program parameters in the manner of task0 (main.c), first 
+set default values to the variables holding the program configuration 
+and then scan through <i>argv</i> to update those values. Points will be reduced for failing to do so.
+  </li>
+</ul><!-- ---------------- T A S K   1 C -------------------- -->
+<h3> Task 1c: Extending the encoder to support encryption </h3>
+
+In this task, make sure you follow the output format precisely.
+Programs which deviate from the instructions will not be accepted!
+
+Please make your output is exactly as the examples bellow.
+<dl>
+  <dt> NAME </dt> <dd> encoder - encodes the input text using encryption key.</dd>
+  <dt> SYNOPSIS </dt>
+  <dd> encoder [OPTION]... </dd>
+  <dt> DESCRIPTION </dt>
+  <dd>
+  encoder receives characters from standard input and prints the 
+corresponding encrypted characters to the standard output. The 
+encryption key is given as a command-line argument.<br>
+  If <b>no</b> argument is supplied, the encoder converts characters into uppercase as before.<br>
+  The encryption key is of the following structure: +e{key}. The 
+argument {key} stands for a sequence of digits whose value will be <b>added</b> to each input characters in sequence,
+  in a <b>cyclic</b> manner.<br>
+  This means that each digit in sequence recieved by the encoder is 
+added to the coresponding character in sequence in the key. When and if 
+the end of the key is reached, 
+  re-start reading encoding digits from the begining of the key.
+
+  You should support both addition and substruction, +e{key} is for 
+addition and -e{key} is for substruction.
+
+  On this task, you need to ignore the char '\n' which means new line 
+after you press ENTER.
+  </dd>
+  
+  <dd>
+
+    </dd><dt> EXAMPLES </dt>
+  <dd>
+    <code>
+#&gt; encoder +e12345
+<br>ABCDEF
+<br>BDFHJG
+<br>12#&lt;
+<br>24&amp;@
+<br>^D
+<br>#&gt; encoder -e4321
+<br>IVRM
+<br>ESPL
+<br>^D
+</code> 
+ <!-- <li>In the output of the second example there should be another character (the encrypted new-line character 0xA). -->
+
+
+  </dd>
+</dl>
+
+
+<h2>Task 2:</h2>
+    <h3> Task 2a: Supporting input from a file</h3>
+  <dt> NAME </dt> <dd> encoder - encoders the input text as uppercase or encrypted letters.</dd>
+  <dt> SYNOPSIS </dt>
+  <dd> encoder [OPTION]... </dd>
+  <dt> DESCRIPTION </dt>
+  <dd>
+  encoder reads characters from standard input and prints the 
+corresponding uppercase characters or encrypted characters (depending on
+ whether the encryption key was given) to the standard output. <br>
+  If <b>no</b> encryption key argument is supplied, the encoder only converts upper-case characters into uppercase .<br>
+  
+  </dd>
+    
+  
+  <dt> OPTIONS </dt>
+  <dd> 
+<dl>
+      <dt> -iFILE </dt>
+      <dd>
+        Input file. Read list of characters to be encoded from a file, instead of from standard input.
+      </dd>
+</dl>
+	 
+</dd><dt> ERRORS </dt>
+  <dd> 
+    <dl>
+      <dd>
+        If FILE cannot be opened for reading, print an error message to standard error and exit.
+      </dd>	
+ </dl>
+ </dd>
+
+  <dt> EXAMPLES </dt> 
+  <dd>
+<code>
+#&gt; echo 'IVRM' &gt; input
+<br>#&gt; encoder -e4321 -iinput
+<br>ESPL
+</code>
+  </dd>
+<ul>
+  <li>Notice that there is no seperation between the -i indicator and the file name (same as in the encryption key).</li>
+</ul>
+ 
+
+
+
+
+<h4> Mandatory requirements</h4>
+<ul>
+  <li>Program arguments may arrive in an <b>arbitrary</b> order. Your program must support this feature.  </li>
+</ul> 
+<h3> Task 2b: Supporting output to a file </h3>
+  <dt> NAME </dt> <dd> encoder - encodes the input text as uppercase or encrypted letters.</dd>
+  <dt> SYNOPSIS </dt>
+  <dd> encoder [OPTION]... </dd>
+  <dt> DESCRIPTION </dt>
+  <dd>
+  encoder reads ASCII text characters from standard input or from a file
+ and prints the corresponding uppercase characters or encrypted 
+characters (depending on whether the encryption key was given) to the 
+standard output or the given file. The encryption key is given as an 
+argument.<br>
+  If <b>no</b> encryption key argument is supplied, the encoder only converts lower-case characters into upper-case.<br>
+  </dd>
+    
+  
+  <dt> OPTIONS </dt>
+  <dd> 
+<dl>
+     <!-- <dt> -iFILE </dt>
+      <dd>
+          Input file. Read list of characters to be encoded from a file, instead of from standard input.
+      </dd>	 -->
+ </dl>
+<dl>
+      <dt> -oFILENAME </dt>
+      <dd>
+        Output file. Prints output to a file named FILENAME instead of the standard output.
+      </dd>	
+ </dl>
+ </dd>
+
+  <dt> EXAMPLES </dt> 
+  <dd>
+    <code>
+#&gt; encoder -e4321 -ooutput
+<br>IVRM
+<br>^D
+<br>#&gt; more output
+<br>ESPL
+    </code>
+ <!-- <li>In the output of the example there should be another character (the encrypted new-line character 0xA). -->
+  </dd>
+<ul>
+  <li>Notice that there is no seperation between the -o indicator and 
+the file name (same as in the encryption key and the input file name).</li>
+</ul>
+ 
+
+<br>   
+
+<p>
+</p><h3> Deliverables: </h3> 
+Task 1 and task 2a must be completed during the regular lab. Task 2b may
+ be done in a completion lab, but only if you run out of time during the
+ regular lab. The deliverables must be submitted until the end of the 
+day.<br>
+You must submit source files for task1C, task2A and task2B in respective
+ folders, and also a makefile that compiles them. The source files must 
+be organized in the following tree structure (where '+' represents a 
+folder and '-' represents a file):<br>
+ + task1C<br>&nbsp;&nbsp;&nbsp;- makfile<br>
+&nbsp;&nbsp;&nbsp;- encoder.c<br>
++ task2A<br>
+&nbsp;&nbsp;&nbsp;- makefile<br>
+&nbsp;&nbsp;&nbsp;- encoder.c<br>
++ task2B<br>
+&nbsp;&nbsp;&nbsp;- makefile<br>
+&nbsp;&nbsp;&nbsp;- encoder.c<br>
+
+<h4> Submission instructions</h4>
+<ul>
+<li>
+Create a zip file with the relevant files (only).
+</li>
+<li>
+Upload zip file to the submission system.
+</li>
+<li>
+Download the zip file from the submission system and extract its content to an empty folder.
+</li>
+<li>
+Compile and test the code to make sure that it still works.
+</li>
+</ul>
+
+</body></html>
